@@ -1,5 +1,14 @@
 import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av'; // Keep expo-av for now since expo-audio has different API
+import { AlarmSound } from '../types';
+
+// Alarm sound mappings
+const ALARM_SOUNDS: Record<AlarmSound, any> = {
+  'beep-24': require('../../assets/beep-24.mp3'),
+  'button-35': require('../../assets/button-35.mp3'),
+  'button-42': require('../../assets/button-42.mp3'),
+  'button-49': require('../../assets/button-49.mp3'),
+};
 
 export const triggerVibration = async () => {
   try {
@@ -22,11 +31,12 @@ export const triggerHeavyVibration = async () => {
 
 let soundObject: Audio.Sound | null = null;
 
-export const playAlarmSound = async () => {
+export const playAlarmSound = async (alarmSound: AlarmSound = 'beep-24') => {
   try {
     // Stop any currently playing sound
     if (soundObject) {
       await soundObject.unloadAsync();
+      soundObject = null;
     }
 
     // Configure audio mode
@@ -36,18 +46,19 @@ export const playAlarmSound = async () => {
       shouldDuckAndroid: true,
     });
 
-    // Create and play a beep sound using system sound
+    // Create and play the selected alarm sound
     soundObject = new Audio.Sound();
-    
-    // You can add custom sound file later in assets folder
-    // For now, we'll use a simple approach
-    // await soundObject.loadAsync(require('../../assets/alarm.mp3'));
-    
-    // Alternative: use system sound or URI
-    await soundObject.loadAsync(require('../../assets/button-49.mp3'));
+    await soundObject.loadAsync(ALARM_SOUNDS[alarmSound]);
+    await soundObject.setVolumeAsync(1.0);
     await soundObject.playAsync();
   } catch (error) {
     console.error('Error playing alarm sound:', error);
+    // Fallback: try to trigger a system beep via haptics
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    } catch (hapticError) {
+      console.error('Fallback haptic also failed:', hapticError);
+    }
   }
 };
 

@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Switch, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSettings } from '../contexts/SettingsContext';
-import { formatTime } from '../utils/timeUtils';
+import { AlarmSound } from '../types';
+import { playAlarmSound } from '../utils/alerts';
 
 interface SettingsScreenProps {
   onNavigateBack: () => void;
@@ -10,6 +11,21 @@ interface SettingsScreenProps {
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigateBack }) => {
   const { settings, updateSettings } = useSettings();
+
+  const alarmSoundOptions: { value: AlarmSound; label: string }[] = [
+    { value: 'beep-24', label: 'Classic Beep' },
+    { value: 'button-35', label: 'Button Click' },
+    { value: 'button-42', label: 'Soft Click' },
+    { value: 'button-49', label: 'Deep Click' },
+  ];
+
+  const handleAlarmSoundChange = async (sound: AlarmSound) => {
+    await updateSettings({ alarmSound: sound });
+    // Play a preview of the selected sound
+    if (settings.soundEnabled) {
+      playAlarmSound(sound);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -38,6 +54,34 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigateBack }
             thumbColor={settings.soundEnabled ? '#4CAF50' : '#f4f3f4'}
           />
         </View>
+
+        {settings.soundEnabled && (
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Alarm Sound</Text>
+              <Text style={styles.settingDescription}>Choose your preferred alarm sound</Text>
+            </View>
+            <View style={styles.soundOptionsContainer}>
+              {alarmSoundOptions.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.soundOption,
+                    settings.alarmSound === option.value && styles.soundOptionSelected
+                  ]}
+                  onPress={() => handleAlarmSoundChange(option.value)}
+                >
+                  <Text style={[
+                    styles.soundOptionText,
+                    settings.alarmSound === option.value && styles.soundOptionTextSelected
+                  ]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
 
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
@@ -158,5 +202,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     marginVertical: 2,
+  },
+  soundOptionsContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    gap: 8,
+  },
+  soundOption: {
+    backgroundColor: '#F8F8F8',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  soundOptionSelected: {
+    backgroundColor: '#E3F2FD',
+    borderColor: '#2196F3',
+  },
+  soundOptionText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  soundOptionTextSelected: {
+    color: '#2196F3',
+    fontWeight: '500',
   },
 });

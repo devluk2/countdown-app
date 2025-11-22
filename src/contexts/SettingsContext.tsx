@@ -12,6 +12,7 @@ const defaultSettings: TimerSettings = {
   soundEnabled: true,
   vibrationEnabled: true,
   repeatEnabled: false,
+  alarmSound: 'beep-24',
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

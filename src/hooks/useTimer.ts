@@ -28,7 +28,7 @@ export const useTimer = () => {
 
     // Play alarm sound
     if (settings.soundEnabled) {
-      await playAlarmSound();
+      await playAlarmSound(settings.alarmSound);
     }
 
     // Handle repeat
